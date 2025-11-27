@@ -68,69 +68,94 @@ export const loader = async ({ request }) => {
 export default function Index() {
   const data = useLoaderData();
   const fetcher = useFetcher();
+
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [email, setEmail] = useState("");
 
+  // Search + Sort states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortType, setSortType] = useState("");
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const openModal = (customer) => {
     setSelectedCustomer(customer);
     setEmail(customer.email || "");
   };
 
+  const emailValidation = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-  // ---------- EMAIL VALIDATION ----------
-  const emailValidation = (value) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(value);
-  };
-
-
-  // ---------- SAVE CLICK ----------
   const handleSave = () => {
-    console.log("Selected Customer:", selectedCustomer);
-    console.log("Updated Email:", email);
-
-  
-     fetcher.submit(
+    fetcher.submit(
       {
         id: selectedCustomer.id,
         email: email,
-        oldEmail: selectedCustomer.email
+        oldEmail: selectedCustomer.email,
       },
       { method: "post" }
     );
   };
 
   useEffect(() => {
-  if (fetcher.data?.success) {
-    window.location.reload();
-  }
-}, [fetcher.data]);
+    if (fetcher.data?.success) {
+      window.location.reload();
+    }
+  }, [fetcher.data]);
 
- const [page, setPage] = useState(1);
- const pageSize = 10;
- const totalPages = Math.ceil(data.customers.length / pageSize);
+  // ---------------- FILTER CUSTOMERS ----------------
+  const filterCustomers = () => {
+    let customers = [...data.customers];
 
-  // Slice paginated data
-  const paginatedCustomers = data.customers.slice(
+    // SEARCH
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      customers = customers.filter(
+        (c) =>
+          c.displayName?.toLowerCase().includes(q) ||
+          c.email?.toLowerCase().includes(q) ||
+          c.phone?.toLowerCase().includes(q)
+      );
+    }
+
+    // SORTING
+    if (sortType === "newest") {
+      customers.sort((a, b) => (a.id < b.id ? 1 : -1));
+    }
+    if (sortType === "oldest") {
+      customers.sort((a, b) => (a.id > b.id ? 1 : -1));
+    }
+    if (sortType === "title") {
+      customers.sort((a, b) =>
+        a.displayName.localeCompare(b.displayName)
+      );
+    }
+
+    return customers;
+  };
+
+  // Filtered list
+  const filtered = filterCustomers();
+
+  // Pagination math
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paginatedCustomers = filtered.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
 
-
-const resetEmail =(c)=>{
-  console.log(c,"new Reset email")
-   fetcher.submit(
-    {
-      id: c.id,
-      type: "reset",
-      restoredEmail: c.metafield?.value || "",
-    },
-    { method: "post" }
-  );
-}
-
+  // RESET EMAIL
+  const resetEmail = (c) => {
+    fetcher.submit(
+      {
+        id: c.id,
+        type: "reset",
+        restoredEmail: c.metafield?.value || "",
+      },
+      { method: "post" }
+    );
+  };
 
   return (
     <>
@@ -147,39 +172,49 @@ const resetEmail =(c)=>{
       </s-box>
 
       <s-section padding="base">
-        <s-section >
+        <s-section>
           <s-grid
             gridTemplateColumns="1fr auto"
             gap="small"
             justifyContent="center"
             alignItems="center"
           >
-             <s-grid-item paddingBlock='small'>
-                <s-box > 
+            <s-grid-item paddingBlock="small">
+              <s-box>
                 <s-search-field
-                  label="Search"
-                  labelAccessibilityVisibility="exclusive"
                   placeholder="Search customers"
-                  className="new-search-custom"
-                  
+                  onInput={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPage(1);
+                  }}
                 />
-                </s-box>
-              </s-grid-item>
-              <s-grid-item>
-                <s-box > 
-                <s-select label="" >
-                   <s-option value="Sort" disb>Sort By</s-option>
+              </s-box>
+            </s-grid-item>
+
+            <s-grid-item>
+              <s-box>
+                <s-select
+                  onChange={(e) => {
+                    setSortType(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <s-option value="">Sort By</s-option>
                   <s-option value="newest">Newest first</s-option>
                   <s-option value="oldest">Oldest first</s-option>
-                  <s-option value="title">Title A–Z</s-option>
-                  <s-option value="price-low">Price: low to high</s-option>
-                  <s-option value="price-high">Price: high to low</s-option>
+                  <s-option value="title">Name A–Z</s-option>
                 </s-select>
-                </s-box> 
-              </s-grid-item>
+              </s-box>
+            </s-grid-item>
           </s-grid>
 
-          <s-table>
+          <s-table
+            paginate={true}
+            hasPreviousPage={page > 1}
+            hasNextPage={page < totalPages}
+            onPreviousPage={() => setPage((p) => p - 1)}
+            onNextPage={() => setPage((p) => p + 1)}
+          >
             <s-table-header-row>
               <s-table-header>Name</s-table-header>
               <s-table-header>Email</s-table-header>
@@ -188,14 +223,14 @@ const resetEmail =(c)=>{
             </s-table-header-row>
 
             <s-table-body>
-              {paginatedCustomers?.map((c) => (
+              {paginatedCustomers.map((c) => (
                 <s-table-row key={c.id}>
                   <s-table-cell>{c.displayName || "—"}</s-table-cell>
                   <s-table-cell>{c.email || "—"}</s-table-cell>
                   <s-table-cell>{c.phone || "—"}</s-table-cell>
 
                   <s-table-cell>
-                    <s-button-group>
+                     <s-button-group>
                    {c.metafield?.value ?
                     <s-button slot="secondary-actions" onClick={() => resetEmail(c)}>
                       <s-icon type="reset" />
@@ -211,50 +246,22 @@ const resetEmail =(c)=>{
               ))}
             </s-table-body>
           </s-table>
-          <s-box padding="base" alignment="center">
-            <s-button
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-
-            >
-              Previous
-            </s-button>
-
-            <span>Page {page} of {totalPages}</span>
-
-            <s-button
-              disabled={page === totalPages}
-              onClick={() => setPage(page + 1)}
-             
-            >
-              Next
-            </s-button>
-          </s-box>
-
         </s-section>
       </s-section>
 
-
-      <s-modal id="modal" heading="Edit Customer Email" >
+      <s-modal id="modal" heading="Edit Customer Email">
         {selectedCustomer ? (
-          <s-box>
-            <s-email-field
-              label="Email"
-              placeholder="Enter updated email"
-              details={`Editing: ${selectedCustomer.displayName}`}
-              value={email}
-              onInput={(e) => setEmail(e.target.value)}
-            />
-          </s-box>
+          <s-email-field
+            label="Email"
+            value={email}
+            placeholder="Enter updated email"
+            onInput={(e) => setEmail(e.target.value)}
+          />
         ) : (
           <s-paragraph>No customer selected</s-paragraph>
         )}
 
-        <s-button
-          slot="secondary-actions"
-          commandFor="modal"
-          command="--hide"
-        >
+        <s-button slot="secondary-actions" commandFor="modal">
           Close
         </s-button>
 
@@ -262,7 +269,6 @@ const resetEmail =(c)=>{
           slot="primary-action"
           variant="primary"
           commandFor="modal"
-          command="--hide"
           disabled={!emailValidation(email)}
           onClick={handleSave}
         >
@@ -272,3 +278,4 @@ const resetEmail =(c)=>{
     </>
   );
 }
+
