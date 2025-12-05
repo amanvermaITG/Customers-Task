@@ -41,7 +41,7 @@ export const loader = async ({ request }) => {
 
   const response = await admin.graphql(`
     query {
-      customers(first: 50) {
+      customers(first: 250) {
         edges {
           node {
             id
@@ -159,6 +159,26 @@ export default function Index() {
 
   return (
     <>
+        {/* <s-box padding="base" align="center" className=""> */}
+        {fetcher.state !== "idle" && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "rgba(255,255,255,0.7)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 9999,
+            }}
+          >
+          <s-spinner accessibilityLabel="Exporting orders..." size="large" />
+          </div>
+          )}
+
       <s-box padding="base">
         <s-heading
           heading="Cliento"
@@ -278,4 +298,3 @@ export default function Index() {
     </>
   );
 }
-

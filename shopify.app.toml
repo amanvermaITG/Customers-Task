@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "bcba1225988ff208808abda8414efbc5"
-name = "react-router-app-test"
-application_url = "https://example.com"
+name = "Cliento"
+application_url = "https://chat-bot-ji8m.onrender.com"
 embedded = true
 
 [build]
@@ -21,9 +21,9 @@ api_version = "2026-01"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "customer_read_customers,customer_read_orders,customer_write_orders,read_assigned_fulfillment_orders,read_customers,read_discounts,read_gift_cards,read_inventory,read_locations,read_markets,read_product_listings,read_products,read_publications,read_shipping,read_third_party_fulfillment_orders,unauthenticated_read_checkouts,unauthenticated_read_customers,unauthenticated_read_product_inventory,unauthenticated_read_product_listings,write_checkouts,write_customers,write_draft_orders,write_gift_cards,write_merchant_managed_fulfillment_orders,write_order_edits,write_orders,write_products,write_publications,write_returns,write_shipping,write_third_party_fulfillment_orders"
-
-
+scopes = "read_assigned_fulfillment_orders,write_checkouts,read_customers,write_customers,read_discounts,write_draft_orders,read_files,write_files,read_gift_cards,write_gift_cards,read_inventory,read_locations,read_markets,write_merchant_managed_fulfillment_orders,write_order_edits,write_orders,read_product_listings,read_products,write_products,read_publications,write_publications,write_returns,read_shipping,write_shipping,read_third_party_fulfillment_orders,write_third_party_fulfillment_orders,customer_read_customers,customer_read_orders,customer_write_orders,unauthenticated_read_checkouts,unauthenticated_read_customers,unauthenticated_read_product_inventory,unauthenticated_read_product_listings"
+optional_scopes = [ ]
+use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://chat-bot-ji8m.onrender.com/api/auth" ]
