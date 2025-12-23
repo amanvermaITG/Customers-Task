@@ -8,5 +8,10 @@ export default [
   {
     path: "/api/product/all",
     file: "./api/products.js",
-  },
+  }
+  // {
+  //   path: "/api/webhook",
+  //   file: "./api/webhook.js",
+  // }
+
 ];
